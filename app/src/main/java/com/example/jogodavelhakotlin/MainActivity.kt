@@ -57,10 +57,54 @@ fun JogoDaVelha(modifier: Modifier = Modifier) {
 
 @Composable
 fun TelaPrincipal(modifier: Modifier = Modifier){
-    var jogadorAtual by remember { mutableStateOf("X") } // Estado para controlar o jogador atual
-    var tabuleiro1 by remember { mutableStateOf(Array(3) { Array(3) { "" } }) } // Estado para representar o tabuleiro
+    var jogadorAtual by remember { mutableStateOf("X") }
+    var tabuleiro by remember { mutableStateOf(Array(3) { Array(3) { "" } }) }
+    var jogoEmAndamento by remember { mutableStateOf(true) }
+    var vencedor by remember { mutableStateOf("") }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    fun verificarVencedor(tabuleiro: Array<Array<String>>): String {
+        // Verificar linhas
+        for (i in 0 until 3) {
+            if (tabuleiro[i][0] == tabuleiro[i][1] && tabuleiro[i][1] == tabuleiro[i][2] && tabuleiro[i][0].isNotEmpty()) {
+                return tabuleiro[i][0]
+            }
+        }
+        // Verificar colunas
+        for (j in 0 until 3) {
+            if (tabuleiro[0][j] == tabuleiro[1][j] && tabuleiro[1][j] == tabuleiro[2][j] && tabuleiro[0][j].isNotEmpty()) {
+                return tabuleiro[0][j]
+            }
+        }
+        // Verificar diagonal principal
+        if (tabuleiro[0][0] == tabuleiro[1][1] && tabuleiro[1][1] == tabuleiro[2][2] && tabuleiro[0][0].isNotEmpty()) {
+            return tabuleiro[0][0]
+        }
+        // Verificar diagonal secundária
+        if (tabuleiro[0][2] == tabuleiro[1][1] && tabuleiro[1][1] == tabuleiro[2][0] && tabuleiro[0][2].isNotEmpty()) {
+            return tabuleiro[0][2]
+        }
+
+        var todasAsCelulasPreenchidas = true
+        for (linha in tabuleiro) {
+            for (celula in linha) {
+                if (celula.isEmpty()) {
+                    todasAsCelulasPreenchidas = false
+                    break
+                }
+            }
+            if (!todasAsCelulasPreenchidas) {
+                break
+            }
+        }
+        if (todasAsCelulasPreenchidas && vencedor.isEmpty()) {
+            return "Empate"
+        }
+
+        // Se não houver vencedor
+        return ""
+    }
+
+        Box(modifier = Modifier.fillMaxSize()) {
         Image(
             modifier = Modifier.fillMaxSize(),
             painter = painterResource(id = R.drawable.background),
@@ -69,7 +113,9 @@ fun TelaPrincipal(modifier: Modifier = Modifier){
         )
 
         Column (
-            modifier = modifier.fillMaxWidth().fillMaxHeight(0.8f),
+            modifier = modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.8f),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ){
@@ -81,17 +127,30 @@ fun TelaPrincipal(modifier: Modifier = Modifier){
             Tabuleiro(
                 modifier = modifier,
                 onCelulaClicked = { row, col ->
-                    if (tabuleiro1[row][col].isEmpty()) {
-                        tabuleiro1[row][col] = jogadorAtual // Faz a jogada na matriz do tabuleiro
+                    if (jogoEmAndamento && tabuleiro[row][col].isEmpty()) {
+                        tabuleiro[row][col] = jogadorAtual // Faz a jogada na matriz do tabuleiro
                         jogadorAtual = if (jogadorAtual == "X") "O" else "X" // Alterna o jogador
+                        vencedor = verificarVencedor(tabuleiro) // Verifica se há um vencedor após cada jogada
+                        if (vencedor.isNotEmpty()) {
+                            jogoEmAndamento = false // Define o jogo como não em andamento
+                        }
                     }
                 },
-                tabuleiro = tabuleiro1
+                tabuleiro = tabuleiro
             )
 
             JogarDeNovo(
-                modifier = modifier
+                modifier = modifier,
+                onJogarDeNovoClicked = {
+                    tabuleiro = Array(3) { Array(3) { "" } } // Reinicia o tabuleiro
+                    jogoEmAndamento = true // Define o jogo como em andamento novamente
+                    vencedor = "" // Limpa o vencedor
+                }
             )
+
+            if (!jogoEmAndamento && vencedor.isNotEmpty()) {
+                FimDeJogo(vencedor = vencedor)
+            }
 
         }
     }
@@ -119,7 +178,7 @@ fun Tabuleiro(modifier: Modifier = Modifier,
                 for (j in tabuleiro[i].indices) {
                     Celula(
                         text = tabuleiro[i][j],
-                        onClick = { onCelulaClicked(i, j) },
+                        onClick = {onCelulaClicked(i, j)},
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -145,12 +204,32 @@ fun Celula(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
 
 
 @Composable
-fun JogarDeNovo(modifier: Modifier = Modifier){
+fun JogarDeNovo(modifier: Modifier = Modifier, onJogarDeNovoClicked: () -> Unit){
     Column (horizontalAlignment = Alignment.CenterHorizontally){
         Text(text = "")
-        Button(onClick = { }) {
+        Button(onClick = { onJogarDeNovoClicked() }) {
             Text(text = "Jogar de Novo")
         }
+
+    }
+}
+
+@Composable
+fun FimDeJogo(vencedor: String) {
+    if (vencedor == "Empate") {
+        Text(
+            text = "Deu Velha! O jogo Empatou.",
+            color = Color.Black,
+            fontSize = 26.sp,
+            modifier = Modifier.padding(vertical = 16.dp)
+        )
+    } else {
+        Text(
+            text = "Parabéns, Jogador $vencedor! Você venceu!",
+            color = Color.Black,
+            fontSize = 26.sp,
+            modifier = Modifier.padding(vertical = 16.dp)
+        )
     }
 }
 
