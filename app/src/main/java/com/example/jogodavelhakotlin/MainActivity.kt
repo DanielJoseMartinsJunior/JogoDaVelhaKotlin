@@ -4,30 +4,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,7 +28,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             JogoDaVelhaKotlinTheme {
-                // A surface container using the 'background' color from the theme
+                // Superfície principal com o jogo da velha
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -51,17 +41,14 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun JogoDaVelha(modifier: Modifier = Modifier) {
-    TelaPrincipal()
-}
-
-@Composable
-fun TelaPrincipal(modifier: Modifier = Modifier){
+fun JogoDaVelha(modifier: Modifier = Modifier){
+    // Estado do jogo
     var jogadorAtual by remember { mutableStateOf("X") }
     var tabuleiro by remember { mutableStateOf(Array(3) { Array(3) { "" } }) }
     var jogoEmAndamento by remember { mutableStateOf(true) }
     var vencedor by remember { mutableStateOf("") }
 
+    // Função para verificar o vencedor
     fun verificarVencedor(tabuleiro: Array<Array<String>>): String {
         // Verificar linhas
         for (i in 0 until 3) {
@@ -84,6 +71,7 @@ fun TelaPrincipal(modifier: Modifier = Modifier){
             return tabuleiro[0][2]
         }
 
+        // Verificar empate
         var todasAsCelulasPreenchidas = true
         for (linha in tabuleiro) {
             for (celula in linha) {
@@ -104,7 +92,8 @@ fun TelaPrincipal(modifier: Modifier = Modifier){
         return ""
     }
 
-        Box(modifier = Modifier.fillMaxSize()) {
+    // Layout da tela principal do jogo
+    Box(modifier = Modifier.fillMaxSize()) {
         Image(
             modifier = Modifier.fillMaxSize(),
             painter = painterResource(id = R.drawable.background),
@@ -115,17 +104,18 @@ fun TelaPrincipal(modifier: Modifier = Modifier){
         Column (
             modifier = modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.8f),
+                .fillMaxHeight(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ){
+            // Exibir o jogador atual
             VezJogador(
                 jogador = jogadorAtual,
                 modifier = modifier
             )
 
+            // Renderizar o tabuleiro do jogo
             Tabuleiro(
-                modifier = modifier,
                 onCelulaClicked = { row, col ->
                     if (jogoEmAndamento && tabuleiro[row][col].isEmpty()) {
                         tabuleiro[row][col] = jogadorAtual // Faz a jogada na matriz do tabuleiro
@@ -139,43 +129,50 @@ fun TelaPrincipal(modifier: Modifier = Modifier){
                 tabuleiro = tabuleiro
             )
 
+            // Exibir mensagem de fim de jogo
+            if (!jogoEmAndamento && vencedor.isNotEmpty()) {
+                FimDeJogo(vencedor = vencedor)
+            }
+
+            // Botão para jogar novamente
             JogarDeNovo(
-                modifier = modifier,
                 onJogarDeNovoClicked = {
                     tabuleiro = Array(3) { Array(3) { "" } } // Reinicia o tabuleiro
                     jogoEmAndamento = true // Define o jogo como em andamento novamente
                     vencedor = "" // Limpa o vencedor
                 }
             )
-
-            if (!jogoEmAndamento && vencedor.isNotEmpty()) {
-                FimDeJogo(vencedor = vencedor)
-            }
-
         }
     }
 }
 
+// Componível para exibir o jogador atual
 @Composable
 fun VezJogador(jogador: String, modifier: Modifier = Modifier){
     Row (
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 16.dp),
+            .padding(top = 18.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ){
-        Text(text = "Vez do Jogador: $jogador", color = Color.Black, fontSize = 26.sp)
+        Text(text = "Vez do Jogador: $jogador", color = Color.Black, fontSize = 28.sp, fontWeight = FontWeight.Bold)
     }
 }
+
+// Componível para renderizar o tabuleiro do jogo
 @Composable
 fun Tabuleiro(modifier: Modifier = Modifier,
               onCelulaClicked: (row: Int, col: Int) -> Unit,
               tabuleiro: Array<Array<String>>) {
 
-    Column(modifier = modifier) {
+    Column(modifier = modifier
+        .fillMaxWidth()
+        .padding(horizontal = 18.dp),
+        horizontalAlignment = Alignment.CenterHorizontally) {
         for (i in tabuleiro.indices) {
             Row {
                 for (j in tabuleiro[i].indices) {
+                    // Celula individual
                     Celula(
                         text = tabuleiro[i][j],
                         onClick = {onCelulaClicked(i, j)},
@@ -187,53 +184,60 @@ fun Tabuleiro(modifier: Modifier = Modifier,
     }
 }
 
+// Componível para renderizar uma célula do tabuleiro
 @Composable
 fun Celula(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Button(
         onClick = onClick,
         modifier = modifier
-            .padding(4.dp)
+            .padding(5.dp)
             .aspectRatio(1f),
         shape = RoundedCornerShape(0.dp),
-
-
     ) {
-        Text(text = text, fontSize = 50.sp, color = Color.White)
+        Text(text = text, fontSize = 64.sp, color = Color.White, fontWeight = FontWeight.Bold)
     }
+
 }
 
-
+// Componível para exibir o botão "Jogar de Novo"
 @Composable
-fun JogarDeNovo(modifier: Modifier = Modifier, onJogarDeNovoClicked: () -> Unit){
-    Column (horizontalAlignment = Alignment.CenterHorizontally){
-        Text(text = "")
+fun JogarDeNovo(onJogarDeNovoClicked: () -> Unit, modifier: Modifier = Modifier){
+    Column (
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = 18.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ){
         Button(onClick = { onJogarDeNovoClicked() }) {
-            Text(text = "Jogar de Novo")
+            Text(text = "Jogar de Novo", fontSize = 28.sp, color = Color.White)
         }
-
     }
 }
 
+// Componível para exibir a mensagem de fim de jogo
 @Composable
 fun FimDeJogo(vencedor: String) {
     if (vencedor == "Empate") {
         Text(
             text = "Deu Velha! O jogo Empatou.",
             color = Color.Black,
-            fontSize = 26.sp,
-            modifier = Modifier.padding(vertical = 16.dp)
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
         )
     } else {
         Text(
             text = "Parabéns, Jogador $vencedor! Você venceu!",
             color = Color.Black,
-            fontSize = 26.sp,
-            modifier = Modifier.padding(vertical = 16.dp)
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
         )
     }
 }
 
-
+// Pré-visualização do jogo
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
@@ -241,3 +245,4 @@ fun DefaultPreview() {
         JogoDaVelha()
     }
 }
+
