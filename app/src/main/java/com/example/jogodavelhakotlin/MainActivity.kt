@@ -72,19 +72,21 @@ fun JogoDaVelha(modifier: Modifier = Modifier){
         }
 
         // Verificar empate
-        var todasAsCelulasPreenchidas = true
+        var todasAsCelulasPreenchidas = false
         for (linha in tabuleiro) {
             for (celula in linha) {
                 if (celula.isEmpty()) {
                     todasAsCelulasPreenchidas = false
                     break
+                } else {
+                    todasAsCelulasPreenchidas = true
                 }
             }
             if (!todasAsCelulasPreenchidas) {
                 break
             }
         }
-        if (todasAsCelulasPreenchidas && vencedor.isEmpty()) {
+        if (todasAsCelulasPreenchidas) {
             return "Empate"
         }
 
@@ -223,7 +225,7 @@ fun JogarDeNovo(onJogarDeNovoClicked: () -> Unit, modifier: Modifier = Modifier)
 fun FimDeJogo(vencedor: String) {
     if (vencedor == "Empate") {
         Text(
-            text = "Deu Velha! O jogo Empatou.",
+            text = "Deu Velha!\n O jogo Empatou.",
             color = Color.Black,
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
