@@ -132,6 +132,9 @@ fun JogoDaVelha(modifier: Modifier = Modifier){
             // Exibir mensagem de fim de jogo
             if (!jogoEmAndamento && vencedor.isNotEmpty()) {
                 FimDeJogo(vencedor = vencedor)
+            }else{
+                Text(text = "\n",
+                    fontSize = 25.sp,)
             }
 
             // Botão para jogar novamente
